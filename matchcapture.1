@@ -1,0 +1,68 @@
+.TH MATCHCAPTURE 1 "matchcapture" "User Commands"
+.SH NAME
+matchcapture \- match an input string against a template pattern and capture segments
+
+.SH SYNOPSIS
+.B matchcapture
+.I <template>
+.I <input>
+.RI [test-commands...]
+
+.SH DESCRIPTION
+.B matchcapture
+matches an input string against a specified template pattern, extracting placeholders as captures. Optionally, tests can be applied to validate specific segments of the input.
+
+.SH PARAMETERS
+.TP
+.I <template>
+The template pattern containing placeholders (`{}`, `{a}`, `{?}`, etc.) to define the capture logic. See `matchcapture.5` for detailed template format information.
+
+.TP
+.I <input>
+The input string to be matched against the template.
+
+.TP
+.RI [test-commands...]
+Optional shell commands to test specific captures. These are executed in the environment with the captured input segment available as the `input` variable.
+
+.SH OUTPUT
+On a successful match, `matchcapture` prints each captured segment to stdout, one per line, with the index of the capture:
+.EX
+0: segment1
+1: segment2
+.EE
+
+If the template does not match the input, it prints:
+.EX
+not a match
+.EE
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success, the input matched the template.
+.TP
+.B 1
+Failure, the input did not match the template or an error occurred.
+
+.SH EXAMPLES
+Match a simple input:
+.EX
+$ matchcapture "/{}/{}/" "/path/to/resource"
+0: path
+1: to
+2: resource
+.EE
+
+Using test commands:
+.EX
+$ matchcapture "/{0}/{}/{}/" "/path/to/resource" \
+  "echo \"$input\" | grep -E 'path|to'"
+0: path
+1: to
+2: resource
+.EE
+
+.SH SEE ALSO
+.BR matchcapture.5 (5)
+

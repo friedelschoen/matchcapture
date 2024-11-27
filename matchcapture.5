@@ -1,0 +1,52 @@
+.TH MATCHCAPTURE 5 "matchcapture" "File Formats"
+.SH NAME
+matchcapture \- template format for capturing segments from input strings
+
+.SH DESCRIPTION
+The `matchcapture` template format defines how input strings are matched and captured using placeholders.
+
+.SH TEMPLATE SYNTAX
+.TP
+.B {}
+A regular capture. Captures any sequence of characters up to the next matching character in the template.
+
+.TP
+.B {a}, {b}, ...
+Named captures. Functions like `{}` but ensures that all occurrences of the same name in the template match the same content.
+
+.TP
+.B {?}
+Non-greedy capture. Matches as few characters as possible.
+
+.TP
+.B {0}, {0|a}, {?0}, {?0|a}, ...
+Tested captures. These placeholders validate the captured content using a test function specified via the CLI. If the test fails, the template does not match.
+
+.SH EXAMPLES
+Capture a simple path structure:
+.EX
+Template: "/{}/{}/"
+Input: "/path/to/resource"
+Captures: ["path", "to", "resource"]
+.EE
+
+Named captures:
+.EX
+Template: "/{a}/{a}/{b}/"
+Input: "/foo/foo/bar"
+Captures: ["foo", "bar"]
+.EE
+
+Tested captures:
+.EX
+Template: "/{0}/{}/{}/"
+Test 0: input must match "path"
+Input: "/path/to/resource"
+Captures: ["path", "to", "resource"]
+.EE
+
+.SH NOTES
+Placeholders can combine multiple features. For example, `{?a}` is a non-greedy, named capture, and `{0|a}` is a tested, named capture.
+
+.SH SEE ALSO
+.BR matchcapture (1)

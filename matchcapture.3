@@ -1,0 +1,134 @@
+.TH MATCHCAPTURE 3 "matchcapture" "Library Functions"
+.SH NAME
+matchcapture, matchcaptures \- match input strings against template patterns and extract captured segments
+
+.SH SYNOPSIS
+.nf
+.B #include "matchcapture.h"
+
+.BI "int matchcapture(char* input, const char* templat, char** captures, int maxcaptures,"
+.BI "               matchcapture_test_t test, void* userdata);"
+
+.BI "int matchcaptures(char* input, const char** templates, char** captures, int maxcaptures,"
+.BI "                int* ncaptures, matchcapture_test_t test, void* userdata);"
+.fi
+
+.SH DESCRIPTION
+
+.B matchcapture
+matches a single input string against a template pattern and extracts segments based on placeholders defined in the template.
+
+.B matchcaptures
+matches an input string against multiple template patterns, attempting each one in sequence until a match is found.
+
+.SH PARAMETERS
+.TP
+.B input
+The input string to be matched.
+
+.TP
+.B templat
+A single template pattern defining the capture logic. See the `matchcapture.5` manual for template syntax.
+
+.TP
+.B templates
+An array of template patterns to be tested sequentially. The array must end with a `NULL` entry.
+
+.TP
+.B captures
+An array to store captured values. Each placeholder in the template corresponds to one entry in the `captures` array. Captures are dynamically allocated and must be freed by the caller.
+
+.TP
+.B maxcaptures
+The maximum number of captures to store in the `captures` array.
+
+.TP
+.B ncaptures
+Pointer to an integer where the number of captures will be stored, if a match is found. Can be `NULL` if not needed. (Used only in `matchcaptures`.)
+
+.TP
+.B test
+A function pointer to a test function of type:
+.nf
+.B typedef int (*matchcapture_test_t)(int testnum, const char* input, void* userdata);
+.fi
+The test function validates captured segments. It should return non-zero for a valid capture or zero for invalid. If no tests are required, this can be `NULL`.
+
+.TP
+.B userdata
+A user-defined pointer passed to the test function. Useful for providing context or additional data for the test.
+
+.SH RETURN VALUE
+.TP
+.B matchcapture
+Returns the number of captures written to the `captures` array on success, or `-1` if the input does not match the template.
+
+.TP
+.B matchcaptures
+Returns the index of the first matching template in the `templates` array, or `-1` if no match is found.
+
+.SH EXAMPLES
+
+.B Matching a single template:
+.EX
+#include "matchcapture.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    char* captures[3];
+    const char* template = "/{}/{}/";
+    char input[] = "/path/to/resource";
+
+    int result = matchcapture(input, template, captures, 3, NULL, NULL);
+
+    if (result >= 0) {
+        for (int i = 0; i < result; i++) {
+            printf("Capture %d: %s\n", i, captures[i]);
+            free(captures[i]);
+        }
+    } else {
+        printf("No match\n");
+    }
+
+    return 0;
+}
+.EE
+
+.B Matching multiple templates:
+.EX
+#include "matchcapture.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    char* captures[2];
+    const char* templates[] = { "/{}/commit/{}.html", "/{}/", NULL };
+    char input[] = "/repo/commit/123.html";
+    int ncaptures;
+
+    int result = matchcaptures(input, templates, captures, 2, &ncaptures, NULL, NULL);
+
+    if (result >= 0) {
+        printf("Matched template index: %d\n", result);
+        for (int i = 0; i < ncaptures; i++) {
+            printf("Capture %d: %s\n", i, captures[i]);
+            free(captures[i]);
+        }
+    } else {
+        printf("No match\n");
+    }
+
+    return 0;
+}
+.EE
+
+.SH SEE ALSO
+.BR matchcapture.5 (5),
+.BR matchcapture.1 (1)
+
+.SH AUTHORS
+Written by the matchcapture project contributors.
+
+.SH LICENSE
+This library is distributed under the MIT License. See the LICENSE file for details.
